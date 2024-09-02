@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swapaholic Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f8fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .dashboard-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #363740;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li.active,
+        .sidebar ul li:hover {
+            background-color: #3b86ff;
+            cursor: pointer;
+        }
+
+        .sidebar ul li a {
+            text-decoration: none;
+            color: #fff;
+            display: block;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 15px;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .header {
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .summary-cards {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 23%;
+            box-sizing: border-box;
+        }
+
+        .card-icon {
+            font-size: 25px;
+        }
+
+        .card-content h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .card-content p {
+            margin: 3px 0 0;
+            font-size: 14px;
+        }
+
+        .small-text {
+            font-size: 10px;
+            color: gray;
+        }
+
+        .charts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .chart {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            flex: 1 1 calc(33% - 15px);
+            box-sizing: border-box;
+            min-width: 30%;
+            /* height: 150px; */
+        }
+
+        .chart h2 {
+            margin-top: 0;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .graph {
+            height: 80px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .tooltip {
+            position: absolute;
+            width: 150px;
+            background-color: black;
+            border-radius: 6px;
+            padding: 5px 0;
+            color: #fff;
+            text-align: center;
+            pointer-events: none;
+            /* Prevent tooltip from blocking mouse events */
+            visibility: hidden;
+            /* Initially hidden */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="logo">
+                <h2>Swapaholic</h2>
+            </div>
+            <ul>
+                <li class="active" id="sales-report-link"><a href="#">Sales Report</a></li>
+                <li id="customer-segmentation-link"><a href="#">Customer Segmentation</a></li>
+            </ul>
+        </div>
+        <div id="sales-report-content" class="main-content">
+            <div class="header">
+                <h1>Sales Report</h1>
+            </div>
+            <div class="content">
+                <div class="summary-cards">
+                    <div class="card">
+                        <div class="card-icon">💰</div>
+                        <div class="card-content">
+                            <h3>$500</h3>
+                            <p>Total Sales</p>
+                            <p class="small-text">+8% from yesterday</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🛒</div>
+                        <div class="card-content">
+                            <h3>300</h3>
+                            <p>Total Orders</p>
+                            <p class="small-text">+5% from yesterday</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📦</div>
+                        <div class="card-content">
+                            <h3>5</h3>
+                            <p>Products Sold</p>
+                            <p class="small-text">+1.2% from yesterday</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">👥</div>
+                        <div class="card-content">
+                            <h3>8</h3>
+                            <p>New Users</p>
+                            <p class="small-text">0.5% from yesterday</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="charts">
+                    <div class="chart" id="monthly-revenue">
+                        <h2>Monthly Revenue</h2>
+                        <div class="graph"></div>
+                    </div>
+                    <div class="chart" id="total-revenue-by-week">
+                        <h2>Total Revenue by Week</h2>
+                        <div id="total-revenue-graph" class="graph"></div>
+                    </div>
+                    <div class="chart" id="sales-prediction">
+                        <h2>Sales Prediction</h2>
+                        <div id="sales-prediction-graph" class="graph"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="customer-segmentation-content" style="display:none;" class="main-content">
+            <div class="header">
+                <h1>Customer Segmentation</h1>
+            </div>
+            <div class="content">
+                <div class="summary-cards">
+                    <div class="card">
+                        <div class="card-icon">💰</div>
+                        <div class="card-content">
+                            <h3>$500</h3>
+                            <p>Total Sales</p>
+                            <p class="small-text"></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🛒</div>
+                        <div class="card-content">
+                            <h3>300</h3>
+                            <p>Total Orders</p>
+                            <p class="small-text">+5% from yesterday</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📦</div>
+                        <div class="card-content">
+                            <h3>5</h3>
+                            <p>Products Sold</p>
+                            <p class="small-text">+1.2% from yesterday</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🕔</div>
+                        <div class="card-content">
+                            <h3 id="session-length"></h3>
+                            <p>Average Session Length</p>
+                            <p class="small-text">2022</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="charts">
+                    <div class="chart" id="gender">
+                        <h2>Customer Demographic</h2>
+                        <div id="gender-graph"></div>
+                    </div>
+                    <div class="chart" id="age">
+                        <h2>Age Group</h2>
+                        <div id="age-graph"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('sales-report-link').addEventListener('click', function () {
+            // Show Sales Report, Hide Customer Segmentation
+            document.getElementById('sales-report-content').style.display = 'block';
+            document.getElementById('customer-segmentation-content').style.display = 'none';
+
+            // Update active class
+            document.getElementById('sales-report-link').classList.add('active');
+            document.getElementById('customer-segmentation-link').classList.remove('active');
+        });
+
+        document.getElementById('customer-segmentation-link').addEventListener('click', function () {
+            // Hide Sales Report, Show Customer Segmentation
+            document.getElementById('sales-report-content').style.display = 'none';
+            document.getElementById('customer-segmentation-content').style.display = 'block';
+
+            // Update active class
+            document.getElementById('sales-report-link').classList.remove('active');
+            document.getElementById('customer-segmentation-link').classList.add('active');
+        });
+    </script>
+    <script>
+        // Load the CSV data
+        d3.csv("customer_new.csv").then(function (data) {
+            // Process the data to get counts of Male and Female
+            const genderCounts = d3.rollup(data, v => v.length, d => d.gender);
+    
+            // Convert the data into a format suitable for a pie chart
+            const genderData = Array.from(genderCounts, ([key, value]) => ({ gender: key, count: value }));
+    
+            // Set dimensions and radius for gender pie chart
+            const width = 250;
+            const height = 250;
+            const radius = Math.min(width, height) / 2;
+    
+            // Create an SVG element for gender pie chart
+            const svgGender = d3.select("#gender-graph")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    
+            // Create a color scale for gender pie chart
+            const colorGender = d3.scaleOrdinal()
+                .domain(genderData.map(d => d.gender))
+                .range(["#E5EAFC", "#FFE2E5"]); // Colors for Male and Female
+    
+            // Create the pie chart layout for gender pie chart
+            const pieGender = d3.pie()
+                .value(d => d.count);
+    
+            const dataReadyGender = pieGender(genderData);
+    
+            // Create the arcs for gender pie chart
+            const arcGender = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius);
+    
+            // Create the tooltip div dynamically and hide it initially
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("visibility", "hidden");
+    
+            // Build the gender pie chart
+            svgGender.selectAll('slices')
+                .data(dataReadyGender)
+                .enter()
+                .append('path')
+                .attr('d', arcGender)
+                .attr('fill', d => colorGender(d.data.gender))
+                .attr("stroke", "#fff")
+                .style("stroke-width", "2px")
+                .on("mouseover", function (event, d) {
+                    // Calculate percentage for gender
+                    const total = d3.sum(genderData.map(d => d.count));
+                    const percent = Math.round(1000 * d.data.count / total) / 10;
+                    const tooltipContent = `${d.data.gender}: ${percent}%`;
+    
+                    // Update the tooltip content and show it
+                    tooltip.html(tooltipContent)
+                        .style("visibility", "visible");
+    
+                    // Change the opacity of the hovered slice
+                    d3.select(this)
+                        .style("opacity", 0.7);
+                })
+                .on("mousemove", function (event) {
+                    // Move the tooltip with the mouse
+                    tooltip.style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    // Hide the tooltip and reset the opacity
+                    tooltip.style("visibility", "hidden");
+                    d3.select(this)
+                        .style("opacity", 1);
+                });
+    
+            // Process the data to group ages
+            const ageGroups = d3.rollups(data, v => v.length, d => {
+                const age = +d.age;
+                if (age >= 20 && age <= 24) return '20-24';
+                if (age >= 25 && age <= 29) return '25-29';
+                if (age >= 30 && age <= 34) return '30-34';
+                if (age >= 35 && age <= 39) return '35-39';
+                if (age >= 40 && age <= 44) return '40-44';
+                if (age >= 45 && age <= 49) return '45-49';
+                return '50+';
+            });
+    
+            const ageData = Array.from(ageGroups, ([key, value]) => ({ ageRange: key, count: value }));
+    
+            // Create an SVG element for age pie chart
+            const svgAge = d3.select("#age-graph")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    
+            // Create a color scale for age pie chart
+            const colorAge = d3.scaleOrdinal()
+                .domain(ageData.map(d => d.ageRange))
+                .range(d3.schemeCategory10); // Default D3 color scheme
+    
+            // Create the pie chart layout for age pie chart
+            const pieAge = d3.pie()
+                .value(d => d.count);
+    
+            const dataReadyAge = pieAge(ageData);
+    
+            // Create the arcs for age pie chart
+            const arcAge = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius);
+    
+            // Build the age pie chart
+            svgAge.selectAll('slices')
+                .data(dataReadyAge)
+                .enter()
+                .append('path')
+                .attr('d', arcAge)
+                .attr('fill', d => colorAge(d.data.ageRange))
+                .attr("stroke", "#fff")
+                .style("stroke-width", "2px")
+                .on("mouseover", function (event, d) {
+                    // Calculate percentage for age
+                    const total = d3.sum(ageData.map(d => d.count));
+                    const percent = Math.round(1000 * d.data.count / total) / 10;
+                    const tooltipContent = `${d.data.ageRange}: ${percent}%`;
+    
+                    // Update the tooltip content and show it
+                    tooltip.html(tooltipContent)
+                        .style("visibility", "visible");
+    
+                    // Change the opacity of the hovered slice
+                    d3.select(this)
+                        .style("opacity", 0.7);
+                })
+                .on("mousemove", function (event) {
+                    // Move the tooltip with the mouse
+                    tooltip.style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    // Hide the tooltip and reset the opacity
+                    tooltip.style("visibility", "hidden");
+                    d3.select(this)
+                        .style("opacity", 1);
+                });
+        });
+    </script>
+    
+    <script>
+        // Load the session dataset
+        d3.csv("session_new.csv").then(function (data) {
+            // Parse the session_length to a format that can be averaged
+            const sessionLengthsInSeconds = data.map(d => {
+                const timeParts = d.session_length.split(' ')[2].split(':');
+                const minutes = +timeParts[1];
+                const seconds = +timeParts[2];
+                return minutes * 60 + seconds; // Convert to total seconds
+            });
+    
+            // Calculate the mean session length in seconds
+            const meanSessionLengthInSeconds = d3.mean(sessionLengthsInSeconds);
+    
+            // Convert the mean session length back to minutes and seconds
+            const meanMinutes = Math.floor(meanSessionLengthInSeconds / 60);
+            const meanSeconds = Math.floor(meanSessionLengthInSeconds % 60);
+    
+            // Format it as "__ m __ s"
+            const formattedSessionLength = `${meanMinutes} m ${meanSeconds} s`;
+    
+            // Display the formatted session length in the HTML element with id "session_length"
+            document.getElementById("session-length").textContent = formattedSessionLength;
+        });
+    </script>    
+</body>
+
+</html>
