@@ -68,15 +68,6 @@
             gap: 15px;
         }
 
-        .header {
-            margin-bottom: 15px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
         .content {
             display: flex;
             flex-direction: column;
@@ -178,17 +169,14 @@
             </ul>
         </div>
         <div id="sales-report-content" class="main-content">
-            <div class="header">
-                <h1>Sales Report</h1>
-            </div>
             <div class="content">
                 <div class="summary-cards">
                     <div class="card">
                         <div class="card-icon">💰</div>
                         <div class="card-content">
-                            <h3>$500</h3>
-                            <p>Total Sales</p>
-                            <p class="small-text">+8% from yesterday</p>
+                            <h3 id="week-revenue"></h3>
+                            <p>This Week's Revenue</p>
+                            <p class="small-text">+8% from last week</p>
                         </div>
                     </div>
                     <div class="card">
@@ -199,44 +187,27 @@
                             <p class="small-text">+5% from yesterday</p>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-icon">📦</div>
-                        <div class="card-content">
-                            <h3>5</h3>
-                            <p>Products Sold</p>
-                            <p class="small-text">+1.2% from yesterday</p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon">👥</div>
-                        <div class="card-content">
-                            <h3>8</h3>
-                            <p>New Users</p>
-                            <p class="small-text">0.5% from yesterday</p>
-                        </div>
+                    <div class="chart">
+                        <h2>Revenue by Days</h2>
+                        <div id="day-revenue-graph"></div>
                     </div>
                 </div>
                 <div class="charts">
                     <div class="chart" id="monthly-revenue">
                         <h2>Monthly Revenue</h2>
-                        <div class="graph"></div>
+                        <div id="monthly-revenue-graph"></div>
                     </div>
-                    <div class="chart" id="total-revenue-by-week">
-                        <h2>Total Revenue by Week</h2>
-                        <div id="total-revenue-graph" class="graph"></div>
-                    </div>
-                    <div class="chart" id="sales-prediction">
-                        <h2>Sales Prediction</h2>
-                        <div id="sales-prediction-graph" class="graph"></div>
+                </div>
+                <div class="charts">
+                    <div class="chart" id="yearly-revenue">
+                        <h2>Yearly Revenue</h2>
+                        <div id="yearly-revenue-graph"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="customer-segmentation-content" style="display:none;" class="main-content">
-            <div class="header">
-                <h1>Customer Segmentation</h1>
-            </div>
             <div class="content">
                 <div class="summary-cards">
                     <div class="card">
@@ -313,15 +284,18 @@
         d3.csv("customer_new.csv").then(function (data) {
             // Process the data to get counts of Male and Female
             const genderCounts = d3.rollup(data, v => v.length, d => d.gender);
-    
+
             // Convert the data into a format suitable for a pie chart
             const genderData = Array.from(genderCounts, ([key, value]) => ({ gender: key, count: value }));
-    
+
+            // Calculate the total number of users
+            const totalUsers = d3.sum(data, d => d.count);
+
             // Set dimensions and radius for gender pie chart
             const width = 250;
             const height = 250;
             const radius = Math.min(width, height) / 2;
-    
+
             // Create an SVG element for gender pie chart
             const svgGender = d3.select("#gender-graph")
                 .append("svg")
@@ -329,29 +303,29 @@
                 .attr("height", height)
                 .append("g")
                 .attr("transform", `translate(${width / 2}, ${height / 2})`);
-    
+
             // Create a color scale for gender pie chart
             const colorGender = d3.scaleOrdinal()
                 .domain(genderData.map(d => d.gender))
                 .range(["#E5EAFC", "#FFE2E5"]); // Colors for Male and Female
-    
+
             // Create the pie chart layout for gender pie chart
             const pieGender = d3.pie()
                 .value(d => d.count);
-    
+
             const dataReadyGender = pieGender(genderData);
-    
+
             // Create the arcs for gender pie chart
             const arcGender = d3.arc()
                 .innerRadius(0)
                 .outerRadius(radius);
-    
+
             // Create the tooltip div dynamically and hide it initially
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("position", "absolute")
                 .style("visibility", "hidden");
-    
+
             // Build the gender pie chart
             svgGender.selectAll('slices')
                 .data(dataReadyGender)
@@ -366,11 +340,11 @@
                     const total = d3.sum(genderData.map(d => d.count));
                     const percent = Math.round(1000 * d.data.count / total) / 10;
                     const tooltipContent = `${d.data.gender}: ${percent}%`;
-    
+
                     // Update the tooltip content and show it
                     tooltip.html(tooltipContent)
                         .style("visibility", "visible");
-    
+
                     // Change the opacity of the hovered slice
                     d3.select(this)
                         .style("opacity", 0.7);
@@ -386,7 +360,7 @@
                     d3.select(this)
                         .style("opacity", 1);
                 });
-    
+
             // Process the data to group ages
             const ageGroups = d3.rollups(data, v => v.length, d => {
                 const age = +d.age;
@@ -398,9 +372,9 @@
                 if (age >= 45 && age <= 49) return '45-49';
                 return '50+';
             });
-    
+
             const ageData = Array.from(ageGroups, ([key, value]) => ({ ageRange: key, count: value }));
-    
+
             // Create an SVG element for age pie chart
             const svgAge = d3.select("#age-graph")
                 .append("svg")
@@ -408,23 +382,23 @@
                 .attr("height", height)
                 .append("g")
                 .attr("transform", `translate(${width / 2}, ${height / 2})`);
-    
+
             // Create a color scale for age pie chart
             const colorAge = d3.scaleOrdinal()
                 .domain(ageData.map(d => d.ageRange))
                 .range(d3.schemeCategory10); // Default D3 color scheme
-    
+
             // Create the pie chart layout for age pie chart
             const pieAge = d3.pie()
                 .value(d => d.count);
-    
+
             const dataReadyAge = pieAge(ageData);
-    
+
             // Create the arcs for age pie chart
             const arcAge = d3.arc()
                 .innerRadius(0)
                 .outerRadius(radius);
-    
+
             // Build the age pie chart
             svgAge.selectAll('slices')
                 .data(dataReadyAge)
@@ -439,11 +413,11 @@
                     const total = d3.sum(ageData.map(d => d.count));
                     const percent = Math.round(1000 * d.data.count / total) / 10;
                     const tooltipContent = `${d.data.ageRange}: ${percent}%`;
-    
+
                     // Update the tooltip content and show it
                     tooltip.html(tooltipContent)
                         .style("visibility", "visible");
-    
+
                     // Change the opacity of the hovered slice
                     d3.select(this)
                         .style("opacity", 0.7);
@@ -461,7 +435,7 @@
                 });
         });
     </script>
-    
+
     <script>
         // Load the session dataset
         d3.csv("session_new.csv").then(function (data) {
@@ -472,21 +446,281 @@
                 const seconds = +timeParts[2];
                 return minutes * 60 + seconds; // Convert to total seconds
             });
-    
+
             // Calculate the mean session length in seconds
             const meanSessionLengthInSeconds = d3.mean(sessionLengthsInSeconds);
-    
+
             // Convert the mean session length back to minutes and seconds
             const meanMinutes = Math.floor(meanSessionLengthInSeconds / 60);
             const meanSeconds = Math.floor(meanSessionLengthInSeconds % 60);
-    
+
             // Format it as "__ m __ s"
             const formattedSessionLength = `${meanMinutes} m ${meanSeconds} s`;
-    
+
             // Display the formatted session length in the HTML element with id "session_length"
             document.getElementById("session-length").textContent = formattedSessionLength;
         });
-    </script>    
+    </script>
+
+    <script>
+        // Load the transactions dataset
+        d3.csv("transactions_new.csv").then(function (data) {
+            // Filter the data for the year 2022
+            const data2022 = data.filter(d => +d.year === 2022);
+
+            // Group data by month and sum the total_amount for each month
+            const revenueByMonth = d3.rollups(
+                data2022,
+                v => d3.sum(v, d => +d.total_amount),
+                d => +d.month
+            );
+
+            // Sort by month
+            revenueByMonth.sort((a, b) => a[0] - b[0]);
+
+            // Set dimensions and margins for the bar chart
+            const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+            const width = 700 - margin.left - margin.right;
+            const height = 150 - margin.top - margin.bottom;
+
+            // Create an SVG element for the bar chart
+            const svg = d3.select("#monthly-revenue-graph")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Set the x scale
+            const x = d3.scaleBand()
+                .domain(revenueByMonth.map(d => d[0]))
+                .range([0, width])
+                .padding(0.1);
+
+            // Set the y scale
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(revenueByMonth, d => d[1])])
+                .nice() // Make sure the y-axis ends on a round number
+                .range([height, 0]);
+
+            // Add the x-axis
+            svg.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x).tickFormat(d => d3.timeFormat("%B")(new Date(2022, d - 1, 1))));
+
+            // Add the y-axis
+            svg.append("g")
+                .call(d3.axisLeft(y).tickFormat(d3.format(".2~s")));
+
+            // Add the bars
+            svg.selectAll(".bar")
+                .data(revenueByMonth)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d[0]))
+                .attr("y", d => y(d[1]))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d[1]))
+                .attr("fill", "#3b86ff");
+
+            // Tooltip div creation
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("visibility", "hidden");
+
+            // Add mouseover event to display tooltip
+            svg.selectAll(".bar")
+                .on("mouseover", function (event, d) {
+                    tooltip.html(`Revenue: $${d3.format(",")(d[1])}`)
+                        .style("visibility", "visible");
+                    d3.select(this)
+                        .style("fill", "#1c58b8");
+                })
+                .on("mousemove", function (event) {
+                    tooltip.style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    tooltip.style("visibility", "hidden");
+                    d3.select(this)
+                        .style("fill", "#3b86ff");
+                });
+
+        });
+    </script>
+
+    <script>
+        // Load the dataset
+        d3.csv("transactions_new.csv").then(function (data) {
+            // Group data by year and calculate total revenue for each year
+            const revenueByYear = d3.rollup(data, v => d3.sum(v, d => +d.total_amount), d => d.year);
+
+            // Convert data to a suitable format for the bar chart
+            const yearlyRevenueData = Array.from(revenueByYear, ([year, total]) => ({ year, total }));
+
+            // Sort the data by year in ascending order
+            yearlyRevenueData.sort((a, b) => d3.ascending(a.year, b.year));
+
+            // Set dimensions for the yearly revenue bar chart
+            const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+            const width = 700 - margin.left - margin.right;
+            const height = 150 - margin.top - margin.bottom;
+
+            // Create SVG element for yearly revenue
+            const svgYearly = d3.select("#yearly-revenue-graph")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Set x and y scales for the yearly revenue chart
+            const xYearly = d3.scaleBand()
+                .domain(yearlyRevenueData.map(d => d.year))
+                .range([0, width])
+                .padding(0.1);
+
+            const yYearly = d3.scaleLinear()
+                .domain([0, d3.max(yearlyRevenueData, d => d.total)])
+                .range([height, 0]);
+
+            // Add x-axis to the yearly revenue chart
+            svgYearly.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xYearly).tickFormat(d => `${d}`));
+
+            // Add y-axis to the yearly revenue chart with formatted tick labels
+            svgYearly.append("g")
+                .call(d3.axisLeft(yYearly)
+                    .tickFormat(d3.format(".2~s"))); // Format to thousands with 2 significant digits (e.g., 100k)
+
+            // Add bars to the yearly revenue chart
+            svgYearly.selectAll(".bar")
+                .data(yearlyRevenueData)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xYearly(d.year))
+                .attr("y", d => yYearly(d.total))
+                .attr("width", xYearly.bandwidth())
+                .attr("height", d => height - yYearly(d.total))
+                .attr("fill", "#69b3a2");
+
+            // Tooltip div creation
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("visibility", "hidden");
+
+            // Add mouseover event to display tooltip
+            svgYearly.selectAll(".bar")
+                .on("mouseover", function (event, d) {
+                    tooltip.html(`Revenue: $${d3.format(",")(d.total)}`)
+                        .style("visibility", "visible");
+                    d3.select(this)
+                        .style("fill", "#4e8d7c");
+                })
+                .on("mousemove", function (event) {
+                    tooltip.style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    tooltip.style("visibility", "hidden");
+                    d3.select(this)
+                        .style("fill", "#69b3a2");
+                });
+        });
+    </script>
+
+    <script>
+        // Load the dataset
+        d3.csv("transactions_new.csv").then(function (data) {
+            // Filter data for the year 2022
+            const data2022 = data.filter(d => d.year === "2022");
+
+            // Group data by day and calculate total revenue for each day in 2022
+            const revenueByDay = d3.rollup(data2022, v => d3.sum(v, d => +d.total_amount), d => d.day);
+
+            // Convert data to a suitable format for the bar chart
+            const dayRevenueData = Array.from(revenueByDay, ([day, total]) => ({ day, total }));
+
+            // Define the order of days
+            const daysOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+            // Sort the data by the defined order of days
+            dayRevenueData.sort((a, b) => daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day));
+
+            // Set dimensions for the day revenue bar chart
+            const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+            const width = 500 - margin.left - margin.right;
+            const height = 150 - margin.top - margin.bottom;
+
+            // Create SVG element for day revenue
+            const svgDay = d3.select("#day-revenue-graph")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Set x and y scales for the day revenue chart
+            const xDay = d3.scaleBand()
+                .domain(dayRevenueData.map(d => d.day))
+                .range([0, width])
+                .padding(0.1);
+
+            const yDay = d3.scaleLinear()
+                .domain([0, d3.max(dayRevenueData, d => d.total)])
+                .range([height, 0]);
+
+            // Add x-axis to the day revenue chart
+            svgDay.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xDay));
+
+            // Add y-axis to the day revenue chart with formatted tick labels
+            svgDay.append("g")
+                .call(d3.axisLeft(yDay)
+                    .tickFormat(d3.format(".2~s"))); // Format to thousands with 2 significant digits (e.g., 100k)
+
+            // Add bars to the day revenue chart
+            svgDay.selectAll(".bar")
+                .data(dayRevenueData)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xDay(d.day))
+                .attr("y", d => yDay(d.total))
+                .attr("width", xDay.bandwidth())
+                .attr("height", d => height - yDay(d.total))
+                .attr("fill", "#69b3a2");
+
+            // Tooltip div creation
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("position", "absolute")
+                .style("visibility", "hidden");
+
+            // Add mouseover event to display tooltip
+            svgDay.selectAll(".bar")
+                .on("mouseover", function (event, d) {
+                    tooltip.html(`Revenue: $${d3.format(",")(d.total)}`)
+                        .style("visibility", "visible");
+                    d3.select(this)
+                        .style("fill", "#4e8d7c");
+                })
+                .on("mousemove", function (event) {
+                    tooltip.style("top", (event.pageY - 10) + "px")
+                        .style("left", (event.pageX + 10) + "px");
+                })
+                .on("mouseout", function () {
+                    tooltip.style("visibility", "hidden");
+                    d3.select(this)
+                        .style("fill", "#69b3a2");
+                });
+        });
+    </script>
+
 </body>
 
 </html>
