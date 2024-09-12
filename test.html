@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swapaholic Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
     <style>
         body {
@@ -13,7 +14,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            height: 100vh;
+            height: 100%;
         }
 
         .dashboard-container {
@@ -66,34 +67,34 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            height: 100vh;
         }
 
         .content {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            flex: 1;
         }
 
         .summary-cards {
             display: flex;
             gap: 15px;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
 
         .card {
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 15px;
+            padding: 20px;
             display: flex;
-            align-items: center;
             gap: 10px;
             width: 23%;
             box-sizing: border-box;
-        }
-
-        .card-icon {
-            font-size: 25px;
+            flex: 1;
+            flex-direction: column;
         }
 
         .card-content h3 {
@@ -150,9 +151,7 @@
             color: #fff;
             text-align: center;
             pointer-events: none;
-            /* Prevent tooltip from blocking mouse events */
             visibility: hidden;
-            /* Initially hidden */
         }
     </style>
 </head>
@@ -171,20 +170,25 @@
         <div id="sales-report-content" class="main-content">
             <div class="content">
                 <div class="summary-cards">
-                    <div class="card">
-                        <div class="card-icon">💰</div>
-                        <div class="card-content">
-                            <h3 id="week-revenue"></h3>
-                            <p>This Week's Revenue</p>
-                            <p class="small-text">+8% from last week</p>
+                    <div class="chart">
+                        <h2>Today's Revenue</h2>
+                        <div class="summary-cards">
+                        <div class="card">
+                            <div class="card-icon"><i class="fa fa-dollar"></i></div>
+                            <div class="card-content">
+                                <h3 id="today-revenue"></h3>
+                                <p>Total Revenue</p>
+                                <p class="small-text">+8% from yesterday</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon">🛒</div>
-                        <div class="card-content">
-                            <h3>300</h3>
-                            <p>Total Orders</p>
-                            <p class="small-text">+5% from yesterday</p>
+                        <div class="card">
+                            <div class="card-icon"><i class="fa fa-shopping-cart"></i></div>
+                            <div class="card-content">
+                                <h3 id="today-orders"></h3>
+                                <p>Total Orders</p>
+                                <p class="small-text">+5% from yesterday</p>
+                            </div>
+                        </div>
                         </div>
                     </div>
                     <div class="chart">
@@ -718,6 +722,33 @@
                     d3.select(this)
                         .style("fill", "#69b3a2");
                 });
+        });
+    </script>
+
+    <script>
+        // Today's Revenue & Orders
+        d3.csv("transactions_new.csv").then(function (data) {
+            // Extract date parts as YYYY-MM-DD strings
+            data.forEach(d => {
+                // Extract only the date part (YYYY-MM-DD) from the created_at field
+                d.date_only = d.created_at.split(' ')[0]; // assuming created_at is in the format 'YYYY-MM-DD HH:mm:ss'
+            });
+
+            // Find the latest date string in the dataset
+            const latestDate = d3.max(data, d => d.date_only);
+
+            // Filter transactions by the latest date string
+            const latestTransactions = data.filter(d => d.date_only === latestDate);
+
+            // Calculate the total revenue for the latest date
+            const totalRevenue = d3.sum(latestTransactions, d => +d.total_amount);
+
+            // Calculate the total number of orders (transactions) for the latest date
+            const totalOrders = latestTransactions.length;
+
+            // Display the total revenue in the HTML
+            d3.select("#today-revenue").text(`$${totalRevenue.toLocaleString()}`);
+            d3.select("#today-orders").text(totalOrders);
         });
     </script>
 
