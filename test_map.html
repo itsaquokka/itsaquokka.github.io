@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<!-- Create an element where the map will take place -->
+<svg id="my_dataviz" width="800" height="800"></svg>
+
+<script>
+    // The svg
+    const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    // Map and projection
+    const projection = d3.geoMercator()
+        // .fitSize([width, height], topo)
+        .scale(40000)  // Increased scale for better fit
+        .center([103.8198, 1.3521])
+        .translate([width / 2, height / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // Data and color scale
+    const data = new Map();
+    const colorScale = d3.scaleThreshold()
+        .domain([10000, 15000, 20000, 25000, 30000])
+        .range(d3.schemeBlues[7]);
+
+    // Add error handling for data loading
+    function handleError(error) {
+        console.error("Data load error:", error);
+        alert("There was an error loading the data. Check the console for details.");
+    }
+
+    // Load external data and boot
+    Promise.all([
+        d3.json("singapore-region.geojson")
+            .then((geoData) => { console.log("GeoJSON loaded successfully:", geoData); return geoData; })
+            .catch(handleError),
+        d3.csv("region.csv", function (d) {
+            // Set the count for each region
+            data.set(d.region.trim(), +d.count);
+        })
+            .then(() => { console.log("CSV data loaded successfully:", data); })
+            .catch(handleError)
+    ]).then(function (loadData) {
+        let topo = loadData[0];
+
+        if (!topo || !topo.features) {
+            console.error("GeoJSON file doesn't have valid features.");
+            alert("GeoJSON features are invalid.");
+            return;
+        }
+
+        let mouseOver = function (d) {
+            d3.selectAll(".region")
+                .transition()
+                .duration(200)
+                .style("opacity", .5);
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style("opacity", 1);
+        };
+
+        let mouseLeave = function (d) {
+            d3.selectAll(".region")
+                .transition()
+                .duration(200)
+                .style("opacity", .8);
+            d3.select(this)
+                .transition()
+                .duration(200);
+        };
+
+        // Draw the map
+        svg.append("g")
+            .selectAll("path")
+            .data(topo.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            // Set the color of each region based on the customer count
+            // .attr("fill", function (d) {
+            //     const regionName = d.properties.shape1;
+            //     const value = data.get(regionName) || 0;
+            //     console.log("Region:", regionName, "Count:", value);
+            //     return colorScale(value);
+            // })
+
+            .style("fill", "none")
+            .style("stroke", "#333")  // Add borders for better visibility
+            .style("stroke-width", "1px")  // Ensure borders are visible
+            .attr("class", "region")
+            .style("opacity", .8)
+            .on("mouseover", mouseOver)
+            .on("mouseleave", mouseLeave);
+    }).catch(function (error) {
+        console.error("Error loading data:", error); // Log errors
+    });
+</script>
