@@ -34,66 +34,106 @@
         alert("There was an error loading the data. Check the console for details.");
     }
 
-    // Load external data and boot
     Promise.all([
-        d3.json("singapore-region.geojson")
-            .then((geoData) => { console.log("GeoJSON loaded successfully:", geoData); return geoData; })
-            .catch(handleError),
-        d3.csv("region.csv", function (d) {
-            // Set the count for each region
-            data.set(d.region.trim(), +d.count);
+    d3.json("singapore-region.geojson")
+        .then((geoData) => {
+            console.log("GeoJSON data: ", geoData.features.map(f => f.properties.shape1)); // Check GeoJSON region names
+            return geoData;
         })
-            .then(() => { console.log("CSV data loaded successfully:", data); })
-            .catch(handleError)
-    ]).then(function (loadData) {
-        let topo = loadData[0];
-
-        if (!topo || !topo.features) {
-            console.error("GeoJSON file doesn't have valid features.");
-            alert("GeoJSON features are invalid.");
-            return;
-        }
-
-        let mouseOver = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .5);
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .style("opacity", 1);
-        };
-
-        let mouseLeave = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .8);
-            d3.select(this)
-                .transition()
-                .duration(200);
-        };
-
-        // Draw the map
-        svg.append("g")
-            .selectAll("path")
-            .data(topo.features)
-            .enter()
-            .append("path")
-            .attr("d", path)
-            // Set the color of each region based on the customer count
-            .attr("fill", function (d) {
-                const regionName = d.properties.shape1.trim();
-                const value = data.get(regionName) || 0;
-                console.log("Region:", regionName, "Count:", value);
-                return colorScale(value);
+        .catch(handleError),
+            d3.csv("region.csv", function (d) {
+                data.set(d.region.trim(), +d.count);
             })
-            .style("fill", "none")
-            .style("stroke", "#333")  // Add borders for better visibility
-            .style("stroke-width", "1px")  // Ensure borders are visible
-            .attr("class", "region")
-            .style("opacity", .8)
+        .then(() => {
+            console.log("CSV data: ", [...data.entries()]);  // Check CSV region mapping
+        })
+        .catch(handleError)
+        ]).then(function (loadData) {
+            let topo = loadData[0];
+
+            // Draw the map
+            svg.append("g")
+                .selectAll("path")
+                .data(topo.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("fill", function (d) {
+                    const regionName = d.properties.shape1.trim();  // Fetch region name from GeoJSON
+                    const value = data.get(regionName) || 0;  // Get count from CSV data
+                    console.log("Filling region:", regionName, "with value:", value);  // Log each fill
+                    return colorScale(value);  // Apply color based on value
+                })
+                .style("stroke", "#333")
+                .style("stroke-width", "1px")
+                .attr("class", "region")
+                .style("opacity", .8)
+                .on("mouseover", mouseOver)
+                .on("mouseleave", mouseLeave);
+        }).catch(function (error) {
+            console.error("Error loading data:", error);  // Log errors
+        });
+
+    // Load external data and boot
+    // Promise.all([
+    //     d3.json("singapore-region.geojson")
+    //         .then((geoData) => { console.log("GeoJSON loaded successfully:", geoData); return geoData; })
+    //         .catch(handleError),
+    //     d3.csv("region.csv", function (d) {
+    //         // Set the count for each region
+    //         data.set(d.region.trim(), +d.count);
+    //     })
+    //         .then(() => { console.log("CSV data loaded successfully:", data); })
+    //         .catch(handleError)
+    // ]).then(function (loadData) {
+    //     let topo = loadData[0];
+
+    //     if (!topo || !topo.features) {
+    //         console.error("GeoJSON file doesn't have valid features.");
+    //         alert("GeoJSON features are invalid.");
+    //         return;
+    //     }
+
+    //     let mouseOver = function (d) {
+    //         d3.selectAll(".region")
+    //             .transition()
+    //             .duration(200)
+    //             .style("opacity", .5);
+    //         d3.select(this)
+    //             .transition()
+    //             .duration(200)
+    //             .style("opacity", 1);
+    //     };
+
+    //     let mouseLeave = function (d) {
+    //         d3.selectAll(".region")
+    //             .transition()
+    //             .duration(200)
+    //             .style("opacity", .8);
+    //         d3.select(this)
+    //             .transition()
+    //             .duration(200);
+    //     };
+
+    //     // Draw the map
+    //     svg.append("g")
+    //         .selectAll("path")
+    //         .data(topo.features)
+    //         .enter()
+    //         .append("path")
+    //         .attr("d", path)
+    //         // Set the color of each region based on the customer count
+    //         .attr("fill", function (d) {
+    //             const regionName = d.properties.shape1.trim();
+    //             const value = data.get(regionName) || 0;
+    //             console.log("Region:", regionName, "Count:", value);
+    //             return colorScale(value);
+    //         })
+    //         .style("fill", "none")
+    //         .style("stroke", "#333")  // Add borders for better visibility
+    //         .style("stroke-width", "1px")  // Ensure borders are visible
+    //         .attr("class", "region")
+    //         .style("opacity", .8)
             // .on("mouseover", mouseOver)
             // .on("mouseleave", mouseLeave);
     }).catch(function (error) {
