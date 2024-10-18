@@ -15,6 +15,7 @@
 
     // Map and projection
     const projection = d3.geoMercator()
+        // .fitSize([width, height], topo)
         .scale(40000)  // Increased scale for better fit
         .center([103.8198, 1.3521])
         .translate([width / 2, height / 2]);
@@ -25,7 +26,7 @@
     const data = new Map();
     const colorScale = d3.scaleThreshold()
         .domain([10000, 15000, 20000, 25000, 30000])
-        .range(d3.schemeBlues[5]); // Adjusted range for d3.schemeBlues[5] (from light to dark)
+        .range(d3.schemeBlues[7]);
 
     // Add error handling for data loading
     function handleError(error) {
@@ -44,7 +45,15 @@
         })
             .then(() => { console.log("CSV data loaded successfully:", data); })
             .catch(handleError)
-    ]).then(function([geoData, csvData]){
+    ]).then(function (loadData) {
+        let topo = loadData[0];
+
+        if (!topo || !topo.features) {
+            console.error("GeoJSON file doesn't have valid features.");
+            alert("GeoJSON features are invalid.");
+            return;
+        }
+
         let mouseOver = function (d) {
             d3.selectAll(".region")
                 .transition()
@@ -69,25 +78,26 @@
         // Draw the map
         svg.append("g")
             .selectAll("path")
-            .data(geoData.features)
+            .data(topo.features)
             .enter()
             .append("path")
             .attr("d", path)
             // Set the color of each region based on the customer count
-            // .attr("fill", function (d) {
-            //     const regionName = d.properties.shape1;  // Adjust property name as needed
-            //     const value = data.get(regionName) || 0;
-            //     console.log("Region:", regionName, "Count:", value);
-            //     return colorScale(value);  // Apply the color scale based on population
-            // })
+            .attr("fill", function (d) {
+                const regionName = d.properties.shape1;
+                const value = data.get(regionName) || 0;
+                console.log("Region:", regionName, "Count:", value);
+                return colorScale(value);
+            })
             .style("stroke", "#333")  // Add borders for better visibility
             .style("stroke-width", "1px")  // Ensure borders are visible
             .attr("class", "region")
             .style("opacity", .8)
             .on("mouseover", mouseOver)
             .on("mouseleave", mouseLeave);
-
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
 </script>
+
+tell me whats going on which the code? I'm tryna build a singapore map to show in my dashboard using next.js ,css, html. etc
