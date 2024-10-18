@@ -67,9 +67,9 @@
                 .style("stroke", "#333")
                 .style("stroke-width", "1px")
                 .attr("class", "region")
-                .style("opacity", .8)
-                .on("mouseover", mouseOver)
-                .on("mouseleave", mouseLeave);
+                .style("opacity", .8);
+                // .on("mouseover", mouseOver)
+                // .on("mouseleave", mouseLeave);
         }).catch(function (error) {
             console.error("Error loading data:", error);  // Log errors
         });
