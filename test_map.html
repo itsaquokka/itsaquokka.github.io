@@ -21,7 +21,7 @@
 
         // Map and projection
         const projection = d3.geoMercator()
-            .scale(3000)  // Adjust the scale
+            .scale(40000)  // Adjust the scale
             .center([103.8198, 1.3521])
             .translate([width / 2, height / 2]);
 
@@ -70,6 +70,9 @@
         }).catch(function (error) {
             console.error("Error loading data:", error);
         });
+
+        console.log(d3.selectAll("path").size()); // This should return the number of paths
+
     </script>
 </body>
 </html>
