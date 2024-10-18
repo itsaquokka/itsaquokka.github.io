@@ -1,78 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Map Visualization</title>
-    <!-- Load d3.js -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-</head>
-<body>
-    <svg id="my_dataviz" width="800" height="600"></svg>
+<meta charset="utf-8">
 
-    <script>
-        const svg = d3.select('my_dataviz').append('svg')
-                .attr('width', 800)
-                .attr('height', 600)
-                .attr('viewBox', '0 0 800 600')  // Add the viewBox here
-                .attr('preserveAspectRatio', 'xMidYMid meet');
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
 
-        const width = 800;
-        const height = 600;  
+<!-- Create an element where the map will take place -->
+<svg id="my_dataviz" width="800" height="800"></svg>
 
-        // Map and projection
-        const projection = d3.geoMercator()
-            .scale(40000)  // Adjust the scale
-            .center([103.8198, 1.3521])
-            .translate([width / 2, height / 2]);
+<script>
+    // The svg
+    const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
 
-        const path = d3.geoPath().projection(projection);
-     
-        function handleError(error) {
-            console.error("Data load error:", error);
-            alert("There was an error loading the data. Check the console for details.");
+    // Map and projection
+    const projection = d3.geoMercator()
+        // .fitSize([width, height], topo)
+        .scale(40000)  // Increased scale for better fit
+        .center([103.8198, 1.3521])
+        .translate([width / 2, height / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    // Data and color scale
+    const data = new Map();
+    const colorScale = d3.scaleThreshold()
+        .domain([10000, 15000, 20000, 25000, 30000])
+        .range(d3.schemeBlues[7]);
+
+    // Add error handling for data loading
+    function handleError(error) {
+        console.error("Data load error:", error);
+        alert("There was an error loading the data. Check the console for details.");
+    }
+
+    // Load external data and boot
+    Promise.all([
+        d3.json("singapore-region.geojson")
+            .then((geoData) => { console.log("GeoJSON loaded successfully:", geoData); return geoData; })
+            .catch(handleError),
+        d3.csv("region.csv", function (d) {
+            // Set the count for each region
+            data.set(d.region.trim(), +d.count);
+        })
+            .then(() => { console.log("CSV data loaded successfully:", data); })
+            .catch(handleError)
+    ]).then(function (loadData) {
+        let topo = loadData[0];
+
+        if (!topo || !topo.features) {
+            console.error("GeoJSON file doesn't have valid features.");
+            alert("GeoJSON features are invalid.");
+            return;
         }
 
-        Promise.all([
-            d3.json("singapore-region.geojson")
-                .then((geoData) => { 
-                    console.log("GeoJSON loaded successfully:", geoData); 
-                    return geoData; 
-                })
-                .catch(handleError),
-            d3.csv("region.csv")
-                .then((csvData) => {
-                    const data = new Map();
-                    csvData.forEach(d => {
-                        data.set(d.region.trim(), +d.count);
-                    });
-                    console.log("CSV data loaded successfully:", data);
-                    return data; 
-                })
-        ]).then(function ([geoData, csvData]) {
-            const colorScale = d3.scaleSequential(d3.interpolateBlues)
-                .domain([0, d3.max(Array.from(csvData.values()))]);
+        let mouseOver = function (d) {
+            d3.selectAll(".region")
+                .transition()
+                .duration(200)
+                .style("opacity", .5);
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style("opacity", 1);
+        };
 
-            svg.selectAll("path")
-                .data(geoData.features)
-                .enter()
-                .append("path")
-                .attr("d", path)
-                .attr("fill", function (d) {
-                    console.log(geoData.features); // Check if features are loaded                    )
-                    const regionName = d.properties.shape1; // Adjust as necessary
-                    const value = csvData.get(regionName) || 0;
-                    return colorScale(value);
-                })
-                .style("stroke", "#333")
-                .style("stroke-width", "1px")
-                .attr("class", "region")
-                .style("opacity", 0.9);
-        }).catch(function (error) {
-            console.error("Error loading data:", error);
-        });
+        let mouseLeave = function (d) {
+            d3.selectAll(".region")
+                .transition()
+                .duration(200)
+                .style("opacity", .8);
+            d3.select(this)
+                .transition()
+                .duration(200);
+        };
 
-        console.log(d3.selectAll("path").size()); // This should return the number of paths
-
-    </script>
-</body>
-</html>
+        // Draw the map
+        svg.append("g")
+            .selectAll("path")
+            .data(topo.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            // Set the color of each region based on the customer count
+            .attr("fill", function (d) {
+                const regionName = d.properties.shape1;
+                const value = data.get(regionName) || 0;
+                console.log("Region:", regionName, "Count:", value);
+                return colorScale(value);
+            })
+            .style("fill", "none")
+            .style("stroke", "#333")  // Add borders for better visibility
+            .style("stroke-width", "1px")  // Ensure borders are visible
+            .attr("class", "region")
+            .style("opacity", .8)
+            // .on("mouseover", mouseOver)
+            // .on("mouseleave", mouseLeave);
+    }).catch(function (error) {
+        console.error("Error loading data:", error); // Log errors
+    });
+</script>
