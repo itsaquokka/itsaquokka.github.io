@@ -82,18 +82,17 @@
             .enter()
             .append("path")
             .attr("d", function(d) {
-                // D3 will handle both Polygon and MultiPolygon types
-                console.log("Geometry Type:", d.geometry.type);  // Check if it's Polygon or MultiPolygon
-                console.log("Coordinates:", d.geometry.coordinates);  // Check the coordinates
-                return path(d);  
+                const pathData = path(d);  // Generate path data using geoPath
+                console.log(pathData);  // Log the generated path data
+                return pathData;
             })
             .attr("fill", function(d) {
-                const regionName = d.properties.shape1;
+                const regionName = d.properties.shape1.trim();
                 const value = data.get(regionName) || 0;
                 return value > 0 ? colorScale(value) : "#ccc";  // Gray for no data
             })
             .style("stroke", "#333")  // Adding stroke for visibility
-            .style("stroke-width", "1px")  // Ensure stroke is visible
+            .style("stroke-width", "3px")  // Ensure stroke is visible
             .attr("class", "region")
             .style("opacity", .8)
             // .on("mouseover", mouseOver)
