@@ -84,7 +84,7 @@
             .attr("d", path)
             // Set the color of each region based on the customer count
             .attr("fill", function (d) {
-                const regionName = d.properties.shape1;
+                const regionName = d.properties.shape1.trim();
                 const value = data.get(regionName) || 0;
                 console.log("Region:", regionName, "Count:", value);
                 return colorScale(value);
