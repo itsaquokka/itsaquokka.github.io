@@ -96,6 +96,23 @@
             .style("opacity", .8)
             .on("mouseover", mouseOver)
             .on("mouseleave", mouseLeave);
+
+         // Add text labels for each region
+        svg.selectAll("text")
+            .data(geoData.features)
+            .enter()
+            .append("text")
+            .attr("transform", function(d) {
+                return "translate(" + path.centroid(d) + ")"; // Position the text at the centroid of each region
+            })
+            .attr("dy", ".35em") // Vertically align the text
+            .text(function(d) {
+                const regionName = d.properties.name; // Adjust based on your GeoJSON properties
+                const value = csvData.get(regionName) || 0; // Get count from the Map
+                return regionName + ": " + value; // Show region name and population
+            })
+            .attr("font-size", "10px") // Adjust font size as needed
+            .attr("fill", "black"); // Set text color
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
