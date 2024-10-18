@@ -34,7 +34,7 @@
         const path = d3.geoPath().projection(projection);
 
         // Load the GeoJSON data and render the map
-        d3.json('path/to/your/singapore.geojson').then(data => {
+        d3.json('singapore.geojson').then(data => {
             svg.selectAll("path")
                 .data(data.features)
                 .enter()
