@@ -101,4 +101,7 @@
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
+
+    const bbox = svg.node().getBBox();
+    console.log("SVG Bounding Box:", bbox); 
 </script>
