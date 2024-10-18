@@ -81,14 +81,18 @@
             .data(topo.features)
             .enter()
             .append("path")
-            .attr("d", path)
-            .attr("fill", "blue")  // This will fill all regions with blue
-            .style("stroke", "#333")  // Maintain the border
+            .attr("d", function(d) {
+                console.log("Region path data:", d); // Log the path data
+                return path(d);  // This should generate the path for each region
+            })
+            .attr("fill", "blue")  // Set to blue temporarily for testing
+            .style("stroke", "#333")
             .style("stroke-width", "1px")
             .attr("class", "region")
             .style("opacity", .8)
             .on("mouseover", mouseOver)
             .on("mouseleave", mouseLeave);
+
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
