@@ -82,7 +82,13 @@
             .enter()
             .append("path")
             .attr("d", path)
-            .attr("fill", "blue")
+            .attr("fill", function (d) {
+                const regionName = d.properties.shape1;
+                const value = data.get(regionName) || 0;
+                console.log("Region:", regionName, "Count:", value);
+                return colorScale(value);  // Use a color scale based on the data
+            })
+            .style("stroke", "black");
             // Set the color of each region based on the customer count
             // .attr("fill", function (d) {
             //     const regionName = d.properties.shape1;
@@ -91,12 +97,12 @@
             //     return colorScale(value);
             // })
             // .style("fill", "none")
-            .style("stroke", "#333")  // Add borders for better visibility
-            .style("stroke-width", "1px")  // Ensure borders are visible
-            .attr("class", "region")
-            .style("opacity", .8)
-            .on("mouseover", mouseOver)
-            .on("mouseleave", mouseLeave);
+            // .style("stroke", "#333")  // Add borders for better visibility
+            // .style("stroke-width", "1px")  // Ensure borders are visible
+            // .attr("class", "region")
+            // .style("opacity", .8)
+            // .on("mouseover", mouseOver)
+            // .on("mouseleave", mouseLeave);
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
