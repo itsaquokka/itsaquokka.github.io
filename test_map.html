@@ -54,26 +54,26 @@
             return;
         }
 
-        let mouseOver = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .5);
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .style("opacity", 1);
-        };
+        // let mouseOver = function (d) {
+        //     d3.selectAll(".region")
+        //         .transition()
+        //         .duration(200)
+        //         .style("opacity", .5);
+        //     d3.select(this)
+        //         .transition()
+        //         .duration(200)
+        //         .style("opacity", 1);
+        // };
 
-        let mouseLeave = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .8);
-            d3.select(this)
-                .transition()
-                .duration(200);
-        };
+        // let mouseLeave = function (d) {
+        //     d3.selectAll(".region")
+        //         .transition()
+        //         .duration(200)
+        //         .style("opacity", .8);
+        //     d3.select(this)
+        //         .transition()
+        //         .duration(200);
+        // };
 
         // Draw the map
         svg.append("g")
@@ -82,22 +82,22 @@
             .enter()
             .append("path")
             .attr("d", function(d) {
-                console.log("Region path data:", d.geometry.coordinates);  // Log the coordinates for each region
-                return path(d);  // Let D3 generate the path from coordinates
+                // D3 will handle both Polygon and MultiPolygon types
+                console.log("Geometry Type:", d.geometry.type);  // Check if it's Polygon or MultiPolygon
+                console.log("Coordinates:", d.geometry.coordinates);  // Check the coordinates
+                return path(d);  
             })
             .attr("fill", function(d) {
-                const regionName = d.properties.shape1;  // Adjust according to your GeoJSON properties
-                const value = data.get(regionName) || 0;  // Get count from your CSV
-                console.log("Region:", regionName, "Count:", value);
-                return colorScale(value);  // Use the color scale for each region
+                const regionName = d.properties.shape1;
+                const value = data.get(regionName) || 0;
+                return value > 0 ? colorScale(value) : "#ccc";  // Gray for no data
             })
-            .style("stroke", "#333")
-            .style("stroke-width", "1px")
+            .style("stroke", "#333")  // Adding stroke for visibility
+            .style("stroke-width", "1px")  // Ensure stroke is visible
             .attr("class", "region")
             .style("opacity", .8)
-            .on("mouseover", mouseOver)
-            .on("mouseleave", mouseLeave);
-
+            // .on("mouseover", mouseOver)
+            // .on("mouseleave", mouseLeave);
 
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
