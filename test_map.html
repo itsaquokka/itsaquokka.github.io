@@ -45,15 +45,7 @@
         })
             .then(() => { console.log("CSV data loaded successfully:", data); })
             .catch(handleError)
-    ]).then(function (loadData) {
-        let topo = loadData[0];
-
-        if (!topo || !topo.features) {
-            console.error("GeoJSON file doesn't have valid features.");
-            alert("GeoJSON features are invalid.");
-            return;
-        }
-
+    ]).then(function([geoData, csvData]){
         let mouseOver = function (d) {
             d3.selectAll(".region")
                 .transition()
@@ -78,18 +70,17 @@
         // Draw the map
         svg.append("g")
             .selectAll("path")
-            .data(topo.features)
+            .data(geoData.features)
             .enter()
             .append("path")
             .attr("d", path)
             // Set the color of each region based on the customer count
-            // .attr("fill", function (d) {
-            //     const regionName = d.properties.shape1;
-            //     const value = data.get(regionName) || 0;
-            //     console.log("Region:", regionName, "Count:", value);
-            //     return colorScale(value);
-            // })
-            .style("fill", "none")
+            .attr("fill", function (d) {
+                const regionName = d.properties.shape1;
+                const value = data.get(regionName) || 0;
+                console.log("Region:", regionName, "Count:", value);
+                return colorScale(value);
+            })
             .style("stroke", "#333")  // Add borders for better visibility
             .style("stroke-width", "1px")  // Ensure borders are visible
             .attr("class", "region")
