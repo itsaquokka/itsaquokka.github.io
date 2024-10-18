@@ -25,7 +25,7 @@
     // Data and color scale
     const data = new Map();
     const colorScale = d3.scaleThreshold()
-        .domain([10000, 15000, 20000, 25000, 30000])
+        .domain([0, 10000, 15000, 20000, 25000, 30000])
         .range(d3.schemeBlues[7]);
 
     // Add error handling for data loading
@@ -69,7 +69,7 @@
             d3.selectAll(".region")
                 .transition()
                 .duration(200)
-                .style("opacity", .8);
+                .style("opacity", 0.8);
             d3.select(this)
                 .transition()
                 .duration(200);
@@ -85,19 +85,17 @@
             // Set the color of each region based on the customer count
             .attr("fill", function (d) {
                 const regionName = d.properties.shape1;
-                const value = data.get(regionName) || 0;
+                const value = data.get(regionName);
                 console.log("Region:", regionName, "Count:", value);
-                return colorScale(value);
+                return value !== undefined ? colorScale(value):"#f0f0f0";
             })
             .style("stroke", "#333")  // Add borders for better visibility
             .style("stroke-width", "1px")  // Ensure borders are visible
             .attr("class", "region")
-            .style("opacity", .8)
+            .style("opacity", 0.8)
             .on("mouseover", mouseOver)
             .on("mouseleave", mouseLeave);
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
 </script>
-
-tell me whats going on which the code? I'm tryna build a singapore map to show in my dashboard using next.js ,css, html. etc
