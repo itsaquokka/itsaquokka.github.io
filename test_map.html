@@ -78,20 +78,26 @@
         // Draw the map
         svg.append("g")
             .selectAll("path")
-            .data(topo.features)
+            .data(topo.features)  // topo is your loaded GeoJSON data
             .enter()
             .append("path")
             .attr("d", function(d) {
-                console.log("Region path data:", d); // Log the path data
-                return path(d);  // This should generate the path for each region
+                console.log("Region path data:", d.geometry.coordinates);  // Log the coordinates for each region
+                return path(d);  // Let D3 generate the path from coordinates
             })
-            .attr("fill", "blue")  // Set to blue temporarily for testing
+            .attr("fill", function(d) {
+                const regionName = d.properties.shape1;  // Adjust according to your GeoJSON properties
+                const value = data.get(regionName) || 0;  // Get count from your CSV
+                console.log("Region:", regionName, "Count:", value);
+                return colorScale(value);  // Use the color scale for each region
+            })
             .style("stroke", "#333")
             .style("stroke-width", "1px")
             .attr("class", "region")
             .style("opacity", .8)
             .on("mouseover", mouseOver)
             .on("mouseleave", mouseLeave);
+
 
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
