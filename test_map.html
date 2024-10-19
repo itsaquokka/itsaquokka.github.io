@@ -15,7 +15,7 @@
 
     // Map and projection
     const projection = d3.geoMercator()
-        .scale(25000)  // Adjusted scale for Singapore
+        .scale(50000)  // Increased scale for better visibility
         .center([103.8198, 1.3521])  // Singapore's center
         .translate([width / 2, height / 2]);
 
@@ -25,8 +25,8 @@
     const data = new Map();
 
     const colorScale = d3.scaleThreshold()
-        .domain([9000, 10000, 15000, 20000, 25000, 30000, 35000])  // Use appropriate values for your regions
-        .range(d3.schemeBlues[7]);  // Choose a color scheme (Blues with 7 colors)
+        .domain([9000, 10000, 15000, 20000, 25000, 30000, 35000])  
+        .range(d3.schemeBlues[7]);  // Use a blue color scheme
 
     // Error handling for data loading
     function handleError(error) {
