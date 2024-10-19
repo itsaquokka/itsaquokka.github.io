@@ -17,10 +17,10 @@
     </style>
 </head>
 <body>
-    <svg class="map" viewBox="0 0 935 778" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg class="map" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
     <script>
-        const width = 935;
-        const height = 778;
+        const width = 800;
+        const height = 600;
         const svg = d3.select(".map")
             .attr("width", width)
             .attr("height", height)
@@ -30,7 +30,7 @@
         // Define a projection
         const projection = d3.geoMercator()
             .center([103.8198, 1.3521]) // Singapore coordinates
-            .scale(50000) // Adjust the scale to fit the map
+            .scale(10000) // Adjust the scale to fit the map
             .translate([width / 2, height / 2]);
 
         // Define a path generator
@@ -47,6 +47,8 @@
                 .attr("stroke", "#fff")
                 .attr("stroke-width", 1);
         });
+
+        console.log(projection([103.851959, 1.290270]));  // Log the projection coordinates
     </script>
 </body>
 </html>
