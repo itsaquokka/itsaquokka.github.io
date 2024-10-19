@@ -36,15 +36,15 @@
 
     // Load external data
     Promise.all([
-        d3.json("singapore-region.geojson")  // Load the GeoJSON for Singapore
+        d3.json("singapore_region.geojson")  // Load the GeoJSON for Singapore
             .then((geoData) => { 
                 console.log("GeoJSON loaded successfully:", geoData); 
                 return geoData; 
             })
             .catch(handleError),
-        d3.csv("region.csv", function (d) {
+        d3.csv("new_region.csv", function (d) {
             // Set the count for each region
-            data.set(d.region.trim(), +d.count);  // No lowercase conversion, just trimming spaces
+            data.set(d.district.trim(), +d.count);  // No lowercase conversion, just trimming spaces
         })
             .then(() => { 
                 console.log("CSV data loaded successfully:", data); 
@@ -58,29 +58,6 @@
             alert("GeoJSON features are invalid.");
             return;
         }
-
-        // Mouse events
-        let mouseOver = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .5);
-            d3.select(this)
-                .transition()
-                .duration(200)
-                .style("opacity", 1);
-        };
-
-        let mouseLeave = function (d) {
-            d3.selectAll(".region")
-                .transition()
-                .duration(200)
-                .style("opacity", .8);
-            d3.select(this)
-                .transition()
-                .duration(200);
-        };
-
         // Draw the map
         svg.append("g")
             .selectAll("path")
@@ -89,16 +66,14 @@
             .append("path")
             .attr("d", path)  // Define the shape of each region
             .attr("fill", function (d) {
-                const regionName = d.properties.shape1.trim();  // Only trim, no lowercase conversion
+                const regionName = d.properties.district.trim();  // Only trim, no lowercase conversion
                 const value = data.get(regionName) || 0;  // Get the corresponding count value from CSV
                 return value ? colorScale(value) : "#ccc";  // Use colorScale for the value, default color if not found
             })
             .style("stroke", "#333")  // Add borders for visibility
             .style("stroke-width", "1px")
             .attr("class", "region")
-            .style("opacity", .8)
-            .on("mouseover", mouseOver)
-            .on("mouseleave", mouseLeave);
+            .style("opacity", .8);  // Adjust opacity for better visibility
     }).catch(function (error) {
         console.error("Error loading data:", error); // Log errors
     });
