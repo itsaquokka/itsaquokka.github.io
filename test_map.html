@@ -15,39 +15,43 @@
 
     // Map and projection
     const projection = d3.geoMercator()
-        // .fitSize([width, height], topo)
-        .scale(50000)  // Increased scale for better fit
-        .center([103.8198, 1.3521])
+        .scale(25000)  // Adjusted scale for Singapore
+        .center([103.8198, 1.3521])  // Singapore's center
         .translate([width / 2, height / 2]);
 
     const path = d3.geoPath().projection(projection);
 
     // Data and color scale
     const data = new Map();
+
     const colorScale = d3.scaleThreshold()
-        .domain([9000, 10000, 15000, 20000, 25000, 30000, 35000])  // Expanded range
-        .range(d3.schemeBlues[7]);  // This has 7 colors, match the range size
+        .domain([9000, 10000, 15000, 20000, 25000, 30000, 35000])  // Use appropriate values for your regions
+        .range(d3.schemeBlues[7]);  // Choose a color scheme (Blues with 7 colors)
 
-
-    // Add error handling for data loading
+    // Error handling for data loading
     function handleError(error) {
         console.error("Data load error:", error);
         alert("There was an error loading the data. Check the console for details.");
     }
 
-    // Load external data and boot
+    // Load external data
     Promise.all([
-        d3.json("singapore-region.geojson")
-            .then((geoData) => { console.log("GeoJSON loaded successfully:", geoData); return geoData; })
+        d3.json("singapore-region.geojson")  // Load the GeoJSON for Singapore
+            .then((geoData) => { 
+                console.log("GeoJSON loaded successfully:", geoData); 
+                return geoData; 
+            })
             .catch(handleError),
         d3.csv("region.csv", function (d) {
             // Set the count for each region
-            data.set(d.region.trim(), +d.count);
+            data.set(d.region.trim(), +d.count);  // No lowercase conversion, just trimming spaces
         })
-            .then(() => { console.log("CSV data loaded successfully:", data); })
+            .then(() => { 
+                console.log("CSV data loaded successfully:", data); 
+            })
             .catch(handleError)
     ]).then(function (loadData) {
-        let topo = loadData[0];
+        let topo = loadData[0];  // Assign GeoJSON data to 'topo'
 
         if (!topo || !topo.features) {
             console.error("GeoJSON file doesn't have valid features.");
@@ -55,6 +59,7 @@
             return;
         }
 
+        // Mouse events
         let mouseOver = function (d) {
             d3.selectAll(".region")
                 .transition()
@@ -84,8 +89,8 @@
             .append("path")
             .attr("d", path)  // Define the shape of each region
             .attr("fill", function (d) {
-                const regionName = d.properties.shape1.trim();  
-                const value = data.get(regionName) || 0;  // Get the corresponding count value from the CSV
+                const regionName = d.properties.shape1.trim();  // Only trim, no lowercase conversion
+                const value = data.get(regionName) || 0;  // Get the corresponding count value from CSV
                 return value ? colorScale(value) : "#ccc";  // Use colorScale for the value, default color if not found
             })
             .style("stroke", "#333")  // Add borders for visibility
