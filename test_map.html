@@ -76,22 +76,19 @@
         };
 
         // Draw the map
-        svg.append("g")
+        ssvg.append("g")
             .selectAll("path")
-            .data(topo.features)
+            .data(topo.features)  // Bind the GeoJSON features (regions)
             .enter()
             .append("path")
-            .attr("d", path)
-            // Set the color of each region based on the customer count
+            .attr("d", path)  // Define the shape of each region
             .attr("fill", function (d) {
-                const regionName = d.properties.shape1.trim();
-                const value = data.get(regionName) || 0;
-                console.log("Region:", regionName, "Count:", value);
-                return colorScale(value);
+                const regionName = d.properties.shape1.trim().toLowerCase();  // Normalize the region name
+                const value = data.get(regionName) || 0;  // Get the corresponding count value from the CSV
+                return value ? colorScale(value) : "#ccc";  // Use colorScale for the value, default color if not found
             })
-            .style("fill", "none")
-            .style("stroke", "#333")  // Add borders for better visibility
-            .style("stroke-width", "1px")  // Ensure borders are visible
+            .style("stroke", "#333")  // Add borders for visibility
+            .style("stroke-width", "1px")
             .attr("class", "region")
             .style("opacity", .8)
             .on("mouseover", mouseOver)
